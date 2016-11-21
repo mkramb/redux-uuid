@@ -10,6 +10,8 @@ import { connect } from 'react-redux';
 const wrapActionCreators = (actionCreators, name, uuid) => {
   return _.mapValues(actionCreators, (actionCreator) => (...args) => {
     const action = actionCreator(...args);
+    if (_.isFunction(action)) return action;
+
     return {
       ...action,
       meta: {
@@ -24,6 +26,7 @@ const wrapActionCreators = (actionCreators, name, uuid) => {
 const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) => {
   const wrapMapStateToProps = (state, { uuid, ...props }) => {
     if (_.isNil(mapStateToProps)) return {};
+
     return mapStateToProps(
       state.uuid[name][uuid],
       props
