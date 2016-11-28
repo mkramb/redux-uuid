@@ -24,6 +24,15 @@ export const unregister = (name, uuid) => ({
   }
 });
 
+export const wrapAction = (action, name, uuid) => ({
+  ...action,
+  meta: {
+    ...action.meta,
+    [UUID_KEY]: uuid,
+    [NAME_KEY]: name
+  }
+});
+
 export const wrapAsGlobalAction = (action) => ({
   ...(_.isFunction(action) ? action(): action),
   meta: {

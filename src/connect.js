@@ -1,27 +1,11 @@
 import React from 'react';
 import { bindActionCreators } from 'redux';
 import { NAME_KEY, UUID_KEY } from './constants';
-import { register, unregister } from './actions';
+import { register, unregister, wrapAction } from './actions';
 import _ from 'lodash';
 import { v4 } from 'uuid';
 import { connect } from 'react-redux';
 
-
-const wrapActionCreators = (actionCreators, name, uuid) => {
-  return _.mapValues(actionCreators, (actionCreator) => (...args) => {
-    const action = actionCreator(...args);
-    if (_.isFunction(action)) return action;
-
-    return {
-      ...action,
-      meta: {
-        ...action.meta,
-        [UUID_KEY]: uuid,
-        [NAME_KEY]: name
-      }
-    };
-  });
-};
 
 const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) => {
   const wrapMapStateToProps = (state, { uuid, ...props }) => {
@@ -36,9 +20,14 @@ const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) =
   const wrapMapDispatchToProps = (dispatch, { uuid, ...props }) => {
     if (_.isNil(mapDispatchToProps)) return {};
     if (_.isPlainObject(mapDispatchToProps)) {
-      const actions = wrapActionCreators(mapDispatchToProps, name, uuid);
       // memoize wrapped actions by passing a thunk
-      return () => bindActionCreators(actions, dispatch);
+      return () => bindActionCreators(
+        mapDispatchToProps, (action) => {
+          return _.isFunction(action)
+            ? action((action) => dispatch(wrapAction(action, name, uuid)))
+            : dispatch(wrapAction(action, name, uuid))
+        }
+      );
     }
     return mapDispatchToProps(dispatch, props);
   };
@@ -57,9 +46,7 @@ const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) =
 
     render() {
       return React.createElement(ConnectedComponent, Object.assign(
-        {},
-        this.props,
-        { uuid: this.uuid }
+        {}, this.props, { uuid: this.uuid }
       ));
     }
   }
