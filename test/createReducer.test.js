@@ -55,10 +55,15 @@ describe('createReducer', () => {
     })
   })
 
-  it('unhandled actions dont alter inner states', () => {
+  it('unhandled actions alter inner states', () => {
     const state = reducer(prevState, {})
-    expect(state.counter).toBe(prevState.counter)
-    expect(state.fizzbuzz).toBe(prevState.fizzbuzz)
+    expect(state.counter).toEqual( {
+      'COUNTER-0': 2,
+      'COUNTER-1': 2
+    })
+    expect(state.fizzbuzz).toEqual({
+      'FIZZBUZZ-0': 'fizz'
+    })
   })
 
   it('alters the counter', () => {

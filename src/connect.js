@@ -1,10 +1,9 @@
 import React from 'react';
 import { bindActionCreators } from 'redux';
-import { NAME_KEY, UUID_KEY } from './constants';
-import { register, unregister, wrapAction } from './actions';
 import _ from 'lodash';
 import { v4 } from 'uuid';
 import { connect } from 'react-redux';
+import { register, unregister, wrapAction } from './actions';
 
 
 const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) => {
@@ -19,20 +18,25 @@ const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) =
 
   const wrapMapDispatchToProps = (dispatch, { uuid, ...props }) => {
     if (_.isNil(mapDispatchToProps)) return {};
+
     if (_.isPlainObject(mapDispatchToProps)) {
       // memoize wrapped actions by passing a thunk
       return () => bindActionCreators(
         mapDispatchToProps, (action) => {
           return _.isFunction(action)
             ? action((action) => dispatch(wrapAction(action, name, uuid)))
-            : dispatch(wrapAction(action, name, uuid))
+            : dispatch(wrapAction(action, name, uuid));
         }
       );
     }
+
     return mapDispatchToProps(dispatch, props);
   };
 
-  const ConnectedComponent = connect(wrapMapStateToProps, wrapMapDispatchToProps)(Component);
+  const ConnectedComponent = connect(
+    wrapMapStateToProps,
+    wrapMapDispatchToProps
+  )(Component);
 
   class ConnectUUID extends React.Component {
     componentWillMount() {
@@ -45,13 +49,16 @@ const connectUUID = (name, mapStateToProps, mapDispatchToProps) => (Component) =
     }
 
     render() {
-      return React.createElement(ConnectedComponent, Object.assign(
-        {}, this.props, { uuid: this.uuid }
-      ));
+      return React.createElement(
+        ConnectedComponent,
+        Object.assign({}, this.props, { uuid: this.uuid })
+      );
     }
   }
 
-  return connect(null, { register, unregister })(ConnectUUID);
+  return connect(
+    null, { register, unregister }
+  )(ConnectUUID);
 };
 
 export default connectUUID;
